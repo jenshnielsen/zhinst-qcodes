@@ -10,11 +10,9 @@ import setuptools
 
 requirements = [
     "numpy>=1.13",
-    "setuptools>=40.1.0",
     "zhinst>=21.8",
     "zhinst-toolkit>=0.2.2",
-    "qcodes>=0.14.0",
-    "attrs",
+    "qcodes>=0.30.0",
 ]
 
 
@@ -51,7 +49,8 @@ setuptools.setup(
     package_dir={"": "src"},
     use_scm_version={
         "write_to": "src/zhinst/qcodes/_version.py",
-        "local_scheme": "no-local-version"},
+        "local_scheme": "no-local-version",
+    },
     setup_requires=["setuptools_scm"],
     install_requires=requirements,
     include_package_data=True,
