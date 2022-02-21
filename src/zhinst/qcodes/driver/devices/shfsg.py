@@ -22,11 +22,11 @@ class CommandTableNode(ZINode):
         device_type: Device type.
     """
 
-    def __init__(self, parent, tk_object, index, snapshot_cache=None, zi_node=None):
+    def __init__(self, parent, tk_object, snapshot_cache=None, zi_node=None):
         ZINode.__init__(
             self,
             parent,
-            f"commandtablenode_{index}",
+            f"commandtable",
             snapshot_cache=snapshot_cache,
             zi_node=zi_node,
         )
@@ -92,26 +92,14 @@ class AWGCore(ZINode):
         self._tk_object = tk_object
 
         if self._tk_object.commandtable:
-
-            channel_list = ZIChannelList(
+            submodule = CommandTableNode(
                 self,
                 "commandtable",
-                CommandTableNode,
                 zi_node="commandtable",
                 snapshot_cache=self._snapshot_cache,
             )
-            for i, x in enumerate(self._tk_object.commandtable):
-                channel_list.append(
-                    CommandTableNode(
-                        self,
-                        x,
-                        i,
-                        zi_node=f"commandtable/{i}",
-                        snapshot_cache=self._snapshot_cache,
-                    )
-                )
             # channel_list.lock()
-            self.add_submodule("commandtable", channel_list)
+            self.add_submodule("commandtable", submodule)
 
     def enable_sequencer(self, *, single: bool) -> None:
         """Starts the sequencer of a specific channel.

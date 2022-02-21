@@ -77,7 +77,7 @@ class Devices(MutableMapping):
                 f"The Qcodes Instance of {serial} already exists.\n"
                 "The device properties can therfor no longer be changed"
             )
-        self._default_properties[serial] = (name, raw)
+        self._default_properties[serial.lower()] = (name, raw)
 
     def connected(self) -> t.List[str]:
         """Get a list of devices connected to the data server.
@@ -409,6 +409,76 @@ class ModuleHandler:
         return self.create_shfqa_sweeper()
 
 
+class ZISession:
+    """Session to a data server.
+
+    Zurich Instruments devices use a server-based connectivity methodology.
+    Server-based means that all communication between the user and the
+    instrument takes place via a computer program called a server, the data
+    sever. The data sever recognizes available instruments and manages all
+    communication between the instrument and the host computer on one side, and
+    communication to all the connected clients on the other side. (For more
+    information on the architecture please refer to the user manual
+    http://docs.zhinst.com/labone_programming_manual/introduction.html)
+
+    The entry point into any connection is therfor a client session to a
+    existing data sever. This class represents a single client session to a
+    data server. The session enables the user to connect to one or multiple
+    instruments (also creates the deticated objects for each device), access
+    the LabOne modules and poll data.
+
+    Since QCoDeS normally instanciate the device specific objects directly
+    this driver also exposes helper classes for that directly. These helper
+    classes create a session and connect the specified device to it. To avoid
+    that each device has a own session by default ``ZISession`` only creates one
+    session to a single data server and reuses that.
+
+    Info:
+        Except for the HF2 a single session can be used to connect to all
+        devices from Zurich Instruments. Since the HF2 is historically based on
+        another data server called the hf2 data server it is not possible to
+        connect HF2 devices a "normal" data server and also not possible to
+        connect devices apart from HF2 to the hf2 data server.
+
+    Args:
+        server_host: Host address of the data server (e.g. localhost)
+        server_port: Port number of the data server. If not specified the session
+            uses the default port 8004 (8005 for HF2 if specified).
+            (default = None)
+        hf2: Flag if the session should be established with an HF2 data sever or
+            the "normal" one for all other devices. If not specified the session
+            will detect the type of the data server based on the port.
+            (default = None)
+        new_session: By default zhinst-qcodes reuses already existing data
+            server session (within itself only), meaning only one session to a
+            data server exists. Setting the Flag will create a new session.
+            Warning: Creating a new session should be done cearfully since it
+                requires more ressources and can create unwanted side effects.
+        connection: Existing daq server object. If specified the session will
+            not create a new session to the data server but reuse the passed
+            one. (default = None)
+    """
+
+    def __new__(
+        cls,
+        server_host: str,
+        server_port: int = None,
+        *,
+        hf2: bool = None,
+        new_session=False,
+        connection: ziDAQServer = None,
+    ):
+        if not new_session:
+            for instance in Session.instances():
+                if instance.server_host == server_host and (
+                    instance.is_hf2_server == hf2
+                    or server_port is None
+                    or instance.server_port == server_port
+                ):
+                    return instance
+        return Session(server_host, server_port, hf2=hf2, connection=connection)
+
+
 class Session(ZIInstrument):
     """Session to a data server.
 
@@ -466,7 +536,7 @@ class Session(ZIInstrument):
         init_nodetree(self, self._tk_object.root, self._snapshot_cache)
 
     def connect_device(
-        self, serial: str, *, interface: str = None, name=None, raw=None
+        self, serial: str, *, interface: str = None, name: str = None, raw: bool = None
     ) -> ZIDevices.DeviceType:
         """Establish a connection to a device.
 
@@ -476,11 +546,15 @@ class Session(ZIInstrument):
             already connected device.
 
         Args:
-            serial (str): Serial number of the device, e.g. *'dev12000'*.
+            serial: Serial number of the device, e.g. *'dev12000'*.
                 The serial number can be found on the back panel of the
                 instrument.
-            interface (str): Device interface (e.g. = "1GbE"). If not specified
+            interface: Device interface (e.g. = "1GbE"). If not specified
                 the default interface from the discover is used.
+            name: Name of the instrument in qcodes.
+                (default = "zi_{dev_type}_{serial}")
+            raw: Flag if qcodes instance should only created with the nodes and
+                not forwarding the toolkit functions. (default = False)
 
         Returns:
             Device object
@@ -584,3 +658,13 @@ class Session(ZIInstrument):
     def daq_server(self) -> ziDAQServer:
         """Managed instance of the zi.ziDAQServer."""
         return self._tk_object.daq_server
+
+    @property
+    def server_host(self) -> str:
+        """Server host"""
+        return self._tk_object.server_host
+
+    @property
+    def server_port(self) -> int:
+        """Server port"""
+        return self._tk_object.server_port
