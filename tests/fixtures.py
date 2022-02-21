@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch
 from pathlib import Path
-from zhinst.qcodes import Session
+from zhinst.qcodes import ZISession
 
 
 @pytest.fixture()
@@ -23,4 +23,4 @@ def session(data_dir, mock_connection):
     with json_path.open("r", encoding="UTF-8") as file:
         nodes_json = file.read()
     mock_connection.return_value.listNodesJSON.return_value = nodes_json
-    yield Session("localhost")
+    yield ZISession("localhost")

@@ -36,7 +36,9 @@ class ZIDevice:
         new_session: By default zhinst-qcodes reuses already existing data
             server session (within itself only), meaning only one session to a
             data server exists. Setting the Flag will create a new session.
-            Warning: Creating a new session should be done cearfully and reusing
+
+            Warning:
+                Creating a new session should be done cearfully and reusing
                 the created sesison is not possible. Consider instantiating a
                 new session directly.
     """
@@ -85,7 +87,9 @@ class ZIDeviceHF2:
         new_session: By default zhinst-qcodes reuses already existing data
             server session (within itself only), meaning only one session to a
             data server exists. Setting the Flag will create a new session.
-            Warning: Creating a new session should be done cearfully and reusing
+
+            Warning:
+                Creating a new session should be done cearfully and reusing
                 the created sesison is not possible. Consider instantiating a
                 new session directly.
     """

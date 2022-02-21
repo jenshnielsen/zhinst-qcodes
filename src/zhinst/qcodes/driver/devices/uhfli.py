@@ -26,7 +26,7 @@ class CommandTableNode(ZINode):
         ZINode.__init__(
             self,
             parent,
-            f"CommandTableNode",
+            f"commandtablenode",
             snapshot_cache=snapshot_cache,
             zi_node=zi_node,
         )
@@ -109,8 +109,8 @@ class AWG(ZINode):
         if self._tk_object.commandtable:
             submodule = CommandTableNode(
                 self,
-                "commandtable",
-                zi_node="commandtable",
+                self._tk_object.commandtable,
+                zi_node=self._tk_object.commandtable.node_info.path,
                 snapshot_cache=self._snapshot_cache,
             )
             # channel_list.lock()

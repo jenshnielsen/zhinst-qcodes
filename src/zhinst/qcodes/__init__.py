@@ -10,6 +10,7 @@ from zhinst.qcodes.device_creator import (
     ZIDevice as SHFSG,
     ZIDevice as UHFLI,
     ZIDevice as UHFQA,
+    ZIDevice,
     ZIDeviceHF2 as HF2,
 )
 

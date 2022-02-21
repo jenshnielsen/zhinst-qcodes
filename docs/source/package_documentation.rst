@@ -7,9 +7,22 @@ zhinst-qcodes exposes the following classes:
    :toctree: _autosummary
    :recursive:
 
-   ~zhinst.qcodes.session.Session
+   ~zhinst.qcodes.session.ZISession
+   ~zhinst.qcodes.device_creator.ZIDevice
 
-In addition the above listed classes the following classes are imported from
+``ZIDevice`` is also exposed as (for convenience):
+
+* HDAWG
+* HF2
+* MFLI
+* MFIA
+* PQSC
+* SHFQA
+* SHFSG
+* UHFLI
+* UHFQA
+
+In addition the following classes are imported from
 `zhinst-toolkit <https://docs.zhinst.com/zhinst-toolkit/en/latest/package_documentation.html>`_:
 
 * Waveforms
@@ -18,13 +31,12 @@ In addition the above listed classes the following classes are imported from
 * AveragingMode
 * SHFQAChannelMode
 
-
-They all can be imported directly from zhinst-toolkit. For example importing the
+They all can be imported directly from zhinst-qcodes. For example importing the
 Session class the following statement can be used:
 
 .. code-block:: python
 
-    >>> from zhinst.qcodes import Session
+    >>> from zhinst.qcodes import Session, HDAWG
 
 Full Package Documentation
 ---------------------------

@@ -29,11 +29,88 @@ The entry point into zhinst-qcodes is therefor a API client session to a data se
 
 .. code-block:: python
 
-    >>> from zhinst.qcodes import Session
-    >>> session = Session("localhost")
+    >>> from zhinst.qcodes import ZISession
+    >>> session = ZISession("localhost")
 
 (if your data server runs on a remote computer (e.g. an MFLI directly) replace
 ``localhost`` with the correct address.)
+
+The data server can be connected to one or multiple devices. By connecting, or accessing
+an already connected, device a new device object for that device is created by
+zhinst-qcodes.
+
+.. code-block:: python
+
+    >>> session.devices.visible()
+    ['dev1234', 'dev5678']
+    >>> session.devices.connected()
+    ['dev1234']
+    >>> session.devices['dev1234']
+    <ZIBaseInstrument: zi_XXXX_dev1234>
+    >>> session.connect_device('dev5678')
+    <ZIBaseInstrument: zi_XXXX_dev5678>
+
+The created device object holds all device specific nodes and depending on the device
+type also implements additional functionallities (e.g. exposes the
+``zhinst.deviceutils`` functions).
+
+.. code-block:: python
+
+    >>> device = session.devices['dev1234']
+    >>> device.demods[0].freq()
+    10e6
+
+The drivers are based on `zhinst-toolkit <https://github.com/zhinst/zhinst-toolkit>`_,
+a generic high level python driver for LabOne. Except for the node tree which in
+case for the zhinst-qcodes driver is implemented with the native QCoDeS
+Parameters, both driver behave the same. To be even more precise the
+zhinst-qcodes forwards all calls (functions, parameters ...) to zhinst-toolkit
+and has no logic buildin what so ever.
+
+For the device drivers this means that some device may have additional functionallity
+provided by zhinst-toolkit. zhinst-qcodes forwards these functionitions.
+Please take a look at the examples in the
+`zhinst-toolkit examples <https://docs.zhinst.com/zhinst-toolkit/en/latest/examples/index.html>`_
+to see a list of all available functions. As already mentioned they can be used
+with the exact same syntax, which also is the case for all the examples from
+zhinst-toolkit (just replace the imports from zhinst-toolkit with zhinst-qcodes).
+
+Easy device setup
+-----------------
+
+Since QCoDeS by design normally creates device objects directly zhinst-qcodes
+exposes helper classes for each instrument type that can be used to create a
+device object directly, without creating a session first. Note that these classes
+are just wrapper around the server-based connectivity methodology.
+
+.. code-block:: python
+
+    >>> from zhinst.qcodes import HDAWG
+    >>> device = HDAWG("DEV1234", "localhost", name="optional_qcodes_name")
+
+.. note::
+
+    If the instrument you are using does not have a dedicated helper class yet
+    you can use the generic one ``ZIDevice``.
+
+Under the hood the helper class just creates a session, connects the device to
+it and returns the device class. It is therfore identical to:
+
+.. code-block:: python
+
+    >>> from zhinst.qcodes import ZISession
+    >>> session = ZISession("localhost")
+    >>> device = session.connect_device("DEV1234")
+
+To avoid creating a new session to data server every time when using these helper
+classes, zhinst-qcodes by default only creates one session to a data server.
+Meaning if one connects two devices to e.g. ``localhost`` they will share the
+same session. For most use cases this is the desired behaviour since it saves
+ressources and avoids unintended edge cases. In the rare cases where you need
+to have a seperate session for a device one can use the ``new_session`` flag.
+But it is prefered to work in such cases with the session directly and not use
+the helper classes, since it is simpler to understand and recreate.
+
 
 Node Tree
 ---------
@@ -65,50 +142,6 @@ to the call operation.
     >>> session.debug.level('warning')
     >>> session.debug.level()
     'warning'
-
-Device communication
---------------------
-
-The data server can be connected to one or multiple devices. By connecting or accessing
-an already connected device a new device object for that device is created by
-zhinst-toolkit.
-
-.. code-block:: python
-
-    >>> session.devices.visible()
-    ['dev1234', 'dev5678']
-    >>> session.devices.connected()
-    ['dev1234']
-    >>> session.devices['dev1234']
-    <ZIBaseInstrument: zi_XXXX_dev1234>
-    >>> session.connect_device('dev5678')
-    <ZIBaseInstrument: zi_XXXX_dev5678>
-
-The created device object holds all device specific nodes and depending on the device
-type also implements additional functionallities (e.g. exposes the
-``zhinst.deviceutils`` functions).
-
-.. code-block:: python
-
-    >>> device = session.devices['dev1234']
-    >>> device.demods[0].freq()
-    10e6
-
-The drivers are based on `zhinst-toolkit <https://github.com/zhinst/zhinst-toolkit>`,
-a generic high level python driver for LabOne. Except for the node tree which in
-case for the zhinst-qcodes driver is implemented with the native QCoDeS
-Parameters both driver behave the same. To be even more precise the
-zhinst-qcodes forwards all calls (functions, parametersm ...) to zhinst qcodes
-and has no logic buildin what so ever.
-
-For the device drivers this mean that some device may have additional functionallity
-provided by zhinst-toolkit. zhinst-qcodes forwards these functionitions.
-Please take a look at the examples in the
-`zhinst-toolkit examples <https://docs.zhinst.com/zhinst-toolkit/en/latest/examples/index.html>`_
-to see a list of all available functions. As already mentioned they can be used
-with the exact same syntax, which also is the case for all the examples from
-zhinst-toolkit (just replace the imports from zhinst-toolkit with zhinst-qcodes).
-
 
 LabOne® modules
 ---------------

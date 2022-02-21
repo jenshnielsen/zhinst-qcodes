@@ -67,7 +67,7 @@ class ZISHFQASweeper(ZIInstrument):
         Returns:
              A dictionary with measurement data of the last sweep.
         """
-        self._tk_object.run()
+        return self._tk_object.run()
 
     def get_result(self) -> dict:
         """Get the measurement data of the last sweep.

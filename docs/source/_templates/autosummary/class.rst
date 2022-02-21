@@ -27,7 +27,7 @@
    .. autosummary::
       :toctree:
    {% for item in attributes %}
-   {%- if item not in inherited_members %}
+   {%- if item not in inherited_members and item not in ["parameters", "functions", "submodules", "log", "label", "unit"]%}
       ~{{ name }}.{{ item }}
    {% endif %}
    {%- endfor %}

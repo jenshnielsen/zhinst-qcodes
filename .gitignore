@@ -9,5 +9,6 @@ build/
 */_build/
 */*/_build/
 _version.py
+*.ipynb
 
 _autosummary/

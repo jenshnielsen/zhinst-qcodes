@@ -71,7 +71,7 @@ class ZIBaseModule(ZIInstrument):
             str: raw string node
         """
         try:
-            node = signal.zi_node.node_info.path
+            node = signal.zi_node
         except AttributeError:
             node = signal
         return node
@@ -93,7 +93,7 @@ class ZIBaseModule(ZIInstrument):
         Args:
             signal (Node): node that should be subcribed.
         """
-        self._raw_module.subscribe(signal.zi_node)
+        self._tk_object.subscribe(signal.tk_node)
 
     def unsubscribe(self, signal: ZIParameter):
         """Unsubscribe from a node.
@@ -103,7 +103,7 @@ class ZIBaseModule(ZIInstrument):
         Args:
             signal (Node): node that should be unsubscribe.
         """
-        self._raw_module.unsubscribe(signal.zi_node)
+        self._tk_object.unsubscribe(signal.tk_node)
 
     def wait_done(self, timeout: float = 20.0, sleep_time: float = 0.5) -> None:
         """Waits until the module is finished.

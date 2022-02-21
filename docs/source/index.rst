@@ -38,6 +38,7 @@ an overview with the :ref:`first_steps/quickstart:Quickstart` guide.
    :caption: Contents
 
    first_steps/index
+   examples/index
    refactoring/index
    package_documentation
    about/index

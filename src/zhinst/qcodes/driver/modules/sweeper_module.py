@@ -30,7 +30,7 @@ class ZISweeperModule(ZIBaseModule):
     """
 
     def __init__(self, tk_object: TKSweeperModule, session: "Session"):
-        super.__init__(tk_object, session, "sweeper_module")
+        super().__init__(tk_object, session, "sweeper_module")
         self._tk_object.root.update_nodes(
             {
                 "/gridnode": {
@@ -40,6 +40,12 @@ class ZISweeperModule(ZIBaseModule):
             }
         )
 
+    def execute(self) -> None:
+        """Start the sweeper.
+
+        Subscription or unsubscription is not possible until the sweep is finished."""
+        self._tk_object.execute()
+
     def read(self) -> t.Dict[ZIParameter, t.List]:
         """Read the aquired data from the module.
 
@@ -48,10 +54,16 @@ class ZISweeperModule(ZIBaseModule):
         Returns:
             Result of the burst grouped by the signals.
         """
-        tk_result = self._tk_object.read(flat=True)
+        tk_result = self._tk_object.read()
         results = {}
         for tk_node, data in tk_result.items():
-            device = self._session.devices[tk_node.root.prefix_hide]
-            parameter = tk_node_to_parameter(device, tk_node)
-            results[parameter] = data
+            if tk_node.raw_tree == ("device",):
+                results["device"] = data
+            else:
+                if tk_node.root.prefix_hide:
+                    device = self._session.devices[tk_node.root.prefix_hide]
+                else:
+                    device = self
+                parameter = tk_node_to_parameter(device, tk_node)
+                results[parameter] = data
         return results

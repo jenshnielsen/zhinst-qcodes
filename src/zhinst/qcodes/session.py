@@ -28,11 +28,13 @@ class Devices(MutableMapping):
     session the list will be up to date.
 
     Args:
-        session (Session): active session to the data server.
+        session: active session to the data server.
+        tk_devices: toolkit devices object.
     """
 
-    def __init__(self, tk_devices: TKDevices):
+    def __init__(self, session: "Session", tk_devices: TKDevices):
         self._tk_devices = tk_devices
+        self._session = session
         self._devices = {}
         self._default_properties = {}
         self._device_classes = {
@@ -52,7 +54,7 @@ class Devices(MutableMapping):
                 name, raw = self._default_properties.get(key, (None, False))
                 self._devices[key] = self._device_classes.get(
                     tk_device.__class__.__name__, ZIDevices.ZIBaseInstrument
-                )(tk_device, name=name, raw=raw)
+                )(tk_device, self._session, name=name, raw=raw)
             return self._devices[key]
         raise KeyError(key)
 
@@ -263,7 +265,7 @@ class ModuleHandler:
             created module
         """
         module = self._tk_modules.create_sweeper_module()
-        return ZIModules.ZISweeperModule(module, self._session, name="sweepersmodule")
+        return ZIModules.ZISweeperModule(module, self._session)
 
     def create_shfqa_sweeper(self) -> ZIModules.ZISHFQASweeper:
         """Create an instance of the SHFQASweeper.
@@ -452,8 +454,12 @@ class ZISession:
         new_session: By default zhinst-qcodes reuses already existing data
             server session (within itself only), meaning only one session to a
             data server exists. Setting the Flag will create a new session.
-            Warning: Creating a new session should be done cearfully since it
+
+            Warning:
+
+                Creating a new session should be done cearfully since it
                 requires more ressources and can create unwanted side effects.
+
         connection: Existing daq server object. If specified the session will
             not create a new session to the data server but reuse the passed
             one. (default = None)
@@ -531,7 +537,7 @@ class Session(ZIInstrument):
             server_host, server_port, connection=connection, hf2=hf2
         )
         super().__init__(f"zi_session_{len(self.instances())}", self._tk_object.root)
-        self._devices = Devices(self._tk_object.devices)
+        self._devices = Devices(self, self._tk_object.devices)
         self._modules = ModuleHandler(self, self._tk_object.modules)
         init_nodetree(self, self._tk_object.root, self._snapshot_cache)
 
@@ -606,7 +612,6 @@ class Session(ZIInstrument):
         recording_time: float = 0.1,
         timeout: float = 0.5,
         flags: PollFlags = PollFlags.DEFAULT,
-        flat: bool = True,
     ) -> t.Dict[ZIParameter, t.Dict[str, t.Any]]:
         """Polls all subsribed data
 
@@ -630,7 +635,7 @@ class Session(ZIInstrument):
             value is a dictionary with the raw data from the device
         """
         polled_data_tk = self._tk_object.poll(
-            recording_time=recording_time, timeout=timeout, flags=flags, flat=flat
+            recording_time=recording_time, timeout=timeout, flags=flags
         )
         polled_data = {}
         for tk_node, data in polled_data_tk.items():

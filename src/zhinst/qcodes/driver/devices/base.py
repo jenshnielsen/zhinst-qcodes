@@ -1,10 +1,12 @@
 """ Base modules for the Zurich Instrument specific qcodes driver. """
-from typing import Type
+import typing as t
 
-from zhinst.toolkit.driver.devices.base import BaseInstrument as TKBaseInstrument
+from zhinst.toolkit.driver.devices import BaseInstrument as TKBaseInstrument, DeviceType
 
 from zhinst.qcodes.qcodes_adaptions import init_nodetree, ZIInstrument
 
+if t.TYPE_CHECKING:
+    from zhinst.qcodes.session import Session
 
 class ZIBaseInstrument(ZIInstrument):
     """Generic QCodes driver for a Zurich Instrument device.
@@ -24,11 +26,13 @@ class ZIBaseInstrument(ZIInstrument):
 
     def __init__(
         self,
-        tk_object: Type[TKBaseInstrument],
+        tk_object: DeviceType,
+        session: "Session",
         name: str = None,
         raw: bool = False,
     ):
         self._tk_object = tk_object
+        self._session = session
         if not name:
             name = (
                 f"zi_{tk_object.__class__.__name__.lower()}_{tk_object.serial.lower()}"
@@ -38,6 +42,15 @@ class ZIBaseInstrument(ZIInstrument):
         if not raw:
             self._init_additional_nodes()
         init_nodetree(self, self._tk_object.root, self._snapshot_cache)
+
+    def get_idn(self) -> t.Dict[str, t.Optional[str]]:
+        """Fake a standard VISA ``*IDN?`` response."""
+        return {
+            "vendor": "Zurich Instruments",
+            "model": self.device_type,
+            "serial": self.serial,
+            "firmware": self.system.fwrevision(),
+        }
 
     def _init_additional_nodes(self) -> None:
         """init additional qcodes parameter."""
@@ -57,10 +70,11 @@ class ZIBaseInstrument(ZIInstrument):
 
         Only if all versions and revisions of the software stack match stability
         can be ensured. The follwing criterias are checked:
-            * minimum required zhinst-deviceutils package is installed
-            * minimum required zhinst-ziPython package is installed
-            * zhinst package matches the LabOne Data Server version
-            * firmware revision matches the LabOne Data Server version
+
+        * minimum required zhinst-deviceutils package is installed
+        * minimum required zhinst-ziPython package is installed
+        * zhinst package matches the LabOne Data Server version
+        * firmware revision matches the LabOne Data Server version
 
         Raises:
             ConnectionError: If the device is currently updating
@@ -83,3 +97,8 @@ class ZIBaseInstrument(ZIInstrument):
     @property
     def device_type(self) -> str:
         return self._tk_object.device_type
+
+    @property
+    def session(self) -> "Session":
+        return self._session
+

@@ -1,7 +1,7 @@
 """ Base modules for the Zurich Instrument specific qcodes driver. """
 import re
 from datetime import datetime
-from typing import Any, List, Optional
+import typing as t
 from contextlib import contextmanager
 
 import numpy as np
@@ -10,6 +10,7 @@ from qcodes.instrument.channel import ChannelList, InstrumentChannel
 from qcodes.instrument.parameter import Parameter
 from qcodes.utils.validators import ComplexNumbers
 from zhinst.toolkit.nodetree import Node, NodeTree
+from zhinst.toolkit.nodetree.node import NodeInfo
 
 
 class ZISnapshotHelper:
@@ -28,7 +29,7 @@ class ZISnapshotHelper:
         self._is_module = is_module
 
     @contextmanager
-    def snapshot(self, name: Optional[str] = None):
+    def snapshot(self, name: t.Optional[str] = None):
 
         is_owner = not self._is_running
         if is_owner:
@@ -39,11 +40,11 @@ class ZISnapshotHelper:
             if is_owner:
                 self._stop_snapshot()
 
-    def _start_snapshot(self, name: Optional[str] = None) -> bool:
+    def _start_snapshot(self, name: t.Optional[str] = None) -> bool:
         """Start a snapshot and make a single get to the device.
 
         Args:
-            name (Optional[str]): Name of the subnode which the snapshot should
+            name: Name of the subnode which the snapshot should
                 be taken. If not specified a snapshot of all nodes will be taken.
                 (default = None)
         Returns:
@@ -75,7 +76,7 @@ class ZISnapshotHelper:
         self._is_running = False
         self._value_dict = {}
 
-    def get(self, parameter: Parameter, fallback_get: callable) -> Any:
+    def get(self, parameter: Parameter, fallback_get: callable) -> t.Any:
         """Get the value for a specific QCodes Parameter.
 
         Tries to mimic the behaviour of a normal get (e.g. update cache).
@@ -83,11 +84,10 @@ class ZISnapshotHelper:
         The fallback get should get the value from the device.
 
         Args:
-            parameter (Parameter): Qcodes Parameter object
-            fallback_get (callable): fallback function to get the value from the
-                                     device
+            parameter: Qcodes Parameter object
+            fallback_get: fallback function to get the value from the device
         Returns:
-            Any: Value for the Node
+            Value for the Node
         """
         value = self._value_dict.get(parameter.zi_node.lower())
         if value is not None:
@@ -202,7 +202,7 @@ class ZIParameter(Parameter):
         self._zi_node = zi_node
         self._tk_node = tk_node
 
-    def __call__(self, *args: Any, **kwargs: Any) -> Optional[Any]:
+    def __call__(self, *args, **kwargs):
         if len(args) == 0:
             if self.gettable:
                 return self.get(**kwargs)
@@ -220,7 +220,7 @@ class ZIParameter(Parameter):
                 )
 
     def snapshot_base(
-        self, update: bool = True, params_to_skip_update: List[str] = None
+        self, update: bool = True, params_to_skip_update: t.List[str] = None
     ) -> dict:
         """
         State of the parameter as a JSON-compatible dict (everything that
@@ -279,7 +279,9 @@ class ZIParameter(Parameter):
 
     def wait_for_state_change(
         self,
-        value: int,
+        value: t.Union[int, str],
+        *,
+        invert: bool = False,
         timeout: float = 2,
         sleep_time: float = 0.005,
     ) -> bool:
@@ -296,13 +298,23 @@ class ZIParameter(Parameter):
             bool: Flag if the value/state of the node has the expected value.
         """
         self._tk_node.wait_for_state_change(
-            value, timeout=timeout, sleep_time=sleep_time
+            value, invert=invert, timeout=timeout, sleep_time=sleep_time
         )
+
+    @property
+    def node_info(self) -> NodeInfo:
+        """Zurich Instrument node representation of the Parameter."""
+        return self._tk_node.node_info
 
     @property
     def zi_node(self) -> Node:
         """Zurich Instrument node representation of the Parameter."""
         return self._zi_node
+
+    @property
+    def tk_node(self) -> Node:
+        """toolkit node of the Parameter."""
+        return self._tk_node
 
 
 class ZINode(InstrumentChannel):
@@ -500,7 +512,7 @@ def tk_node_to_parameter(root, tk_node: Node):
 
 
 def _get_submodule(
-    layer, parents: List[str], snapshot_cache: ZISnapshotHelper
+    layer, parents: t.List[str], snapshot_cache: ZISnapshotHelper
 ) -> ZINode:
     """get the nested parent element for a node.
 
