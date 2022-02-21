@@ -145,14 +145,16 @@ class AWG(ZINode):
         self._tk_object = tk_object
 
         if self._tk_object.commandtable:
-            submodule = CommandTableNode(
-                self,
-                self._tk_object.commandtable,
-                zi_node=self._tk_object.commandtable.node_info.path,
-                snapshot_cache=self._snapshot_cache,
+
+            self.add_submodule(
+                "commandtable",
+                CommandTableNode(
+                    self,
+                    self._tk_object.commandtable,
+                    zi_node=self._tk_object.commandtable.node_info.path,
+                    snapshot_cache=self._snapshot_cache,
+                ),
             )
-            # channel_list.lock()
-            self.add_submodule("commandtable", submodule)
 
     def enable_sequencer(self, *, single: bool) -> None:
         """Starts the sequencer of a specific channel.
@@ -238,7 +240,11 @@ class UHFQA(ZIBaseInstrument):
         if self._tk_object.qas:
 
             channel_list = ZIChannelList(
-                self, "qas", QAS, zi_node="qas", snapshot_cache=self._snapshot_cache
+                self,
+                "qas",
+                QAS,
+                zi_node=self._tk_object.qas.node_info.path,
+                snapshot_cache=self._snapshot_cache,
             )
             for i, x in enumerate(self._tk_object.qas):
                 channel_list.append(
@@ -246,7 +252,7 @@ class UHFQA(ZIBaseInstrument):
                         self,
                         x,
                         i,
-                        zi_node=f"qas/{i}",
+                        zi_node=self._tk_object.qas[i].node_info.path,
                         snapshot_cache=self._snapshot_cache,
                     )
                 )
@@ -256,7 +262,11 @@ class UHFQA(ZIBaseInstrument):
         if self._tk_object.awgs:
 
             channel_list = ZIChannelList(
-                self, "awgs", AWG, zi_node="awgs", snapshot_cache=self._snapshot_cache
+                self,
+                "awgs",
+                AWG,
+                zi_node=self._tk_object.awgs.node_info.path,
+                snapshot_cache=self._snapshot_cache,
             )
             for i, x in enumerate(self._tk_object.awgs):
                 channel_list.append(
@@ -264,7 +274,7 @@ class UHFQA(ZIBaseInstrument):
                         self,
                         x,
                         i,
-                        zi_node=f"awgs/{i}",
+                        zi_node=self._tk_object.awgs[i].node_info.path,
                         snapshot_cache=self._snapshot_cache,
                     )
                 )

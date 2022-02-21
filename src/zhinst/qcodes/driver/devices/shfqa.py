@@ -370,7 +370,7 @@ class QAChannel(ZINode):
                 Generator(
                     self,
                     self._tk_object.generator,
-                    zi_node="generator",
+                    zi_node=self._tk_object.generator.node_info.path,
                     snapshot_cache=self._snapshot_cache,
                 ),
             )
@@ -382,7 +382,7 @@ class QAChannel(ZINode):
                 Readout(
                     self,
                     self._tk_object.readout,
-                    zi_node="readout",
+                    zi_node=self._tk_object.readout.node_info.path,
                     snapshot_cache=self._snapshot_cache,
                 ),
             )
@@ -394,7 +394,7 @@ class QAChannel(ZINode):
                 Spectroscopy(
                     self,
                     self._tk_object.spectroscopy,
-                    zi_node="spectroscopy",
+                    zi_node=self._tk_object.spectroscopy.node_info.path,
                     snapshot_cache=self._snapshot_cache,
                 ),
             )
@@ -571,7 +571,7 @@ class SHFQA(ZIBaseInstrument):
                 self,
                 "qachannels",
                 QAChannel,
-                zi_node="qachannels",
+                zi_node=self._tk_object.qachannels.node_info.path,
                 snapshot_cache=self._snapshot_cache,
             )
             for i, x in enumerate(self._tk_object.qachannels):
@@ -580,7 +580,7 @@ class SHFQA(ZIBaseInstrument):
                         self,
                         x,
                         i,
-                        zi_node=f"qachannels/{i}",
+                        zi_node=self._tk_object.qachannels[i].node_info.path,
                         snapshot_cache=self._snapshot_cache,
                     )
                 )
@@ -593,7 +593,7 @@ class SHFQA(ZIBaseInstrument):
                 self,
                 "scopes",
                 SHFScope,
-                zi_node="scopes",
+                zi_node=self._tk_object.scopes.node_info.path,
                 snapshot_cache=self._snapshot_cache,
             )
             for i, x in enumerate(self._tk_object.scopes):
@@ -602,7 +602,7 @@ class SHFQA(ZIBaseInstrument):
                         self,
                         x,
                         i,
-                        zi_node=f"scopes/{i}",
+                        zi_node=self._tk_object.scopes[i].node_info.path,
                         snapshot_cache=self._snapshot_cache,
                     )
                 )

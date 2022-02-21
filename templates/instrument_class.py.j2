@@ -9,7 +9,7 @@ from qcodes.instrument.parameter import Parameter as QCParameter
 from qcodes.utils.validators import ComplexNumbers
 from zhinst.toolkit.driver.devices.{{ name.lower() }} import {{ name }} as TK{{ name }}
 from zhinst.toolkit import CommandTable,Waveforms
-from zhinst.toolkit.interface import *
+from zhinst.toolkit.interface import AveragingMode, SHFQAChannelMode
 from zhinst.qcodes.driver.devices.base import ZIBaseInstrument
 from zhinst.qcodes.qcodes_adaptions import ZINode, ZIChannelList
 

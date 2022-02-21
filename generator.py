@@ -35,15 +35,8 @@ def getPropertyInfo(
     if "deprecated" in inspect.getsource(property.fget):
         # TODO decide if we should keep them or remove them?
         print(f"WARNING {name}: deprecated property -> ignored")
-    elif (
-        hasattr(typehint["return"], "__origin__")
-        and (
-            typehint["return"].__origin__ == typing.Union
-            or issubclass(typehint["return"].__origin__, Sequence)
-        )
-    ) or (
-        hasattr(typehint["return"], "_name")
-        and typehint["return"]._name.lower() == "list"
+    elif "typing.Union" in str(typehint["return"]) or "typing.Sequence" in str(
+        typehint["return"]
     ):
         try:
             item_class = typehint["return"].__args__[0]
@@ -62,11 +55,20 @@ def getPropertyInfo(
             f"but the item typehint is of {str(item_class)}."
             "only submodules are currently allowed."
         )
+    elif hasattr(typehint["return"], "_name") and typehint["return"]._name == "List":
+        return parameter_tuple(name, False)
     elif typehint["return"] == Node:
         return parameter_tuple(name, True)
     elif typehint["return"] == NodeTree:
         raise RuntimeError("Why would there be such thing?")
-    elif inspect.isclass(typehint["return"]) and issubclass(typehint["return"], Node):
+    elif (
+        inspect.isclass(typehint["return"])
+        and issubclass(typehint["return"], Node)
+        or (
+            "typing.Optional" in str(typehint["return"])
+            and issubclass(typehint["return"].__args__[0], Node)
+        )
+    ):
         return submodule_tuple(typehint["return"], name, False)
     return parameter_tuple(name, False)
 
@@ -145,6 +147,8 @@ def generate_submodules_info(sub_modules: list) -> typing.List[list]:
     parent_info = []  # information for the parent class
     submodule_info = []  # information about the submodule classes
     for module, name, is_list in sub_modules:
+        if "typing.Optional" in str(module):
+            module = module.__args__[0]
         parent_info.append(
             {"name": name, "class_name": module.__name__, "is_list": is_list}
         )
@@ -417,6 +421,3 @@ def instrument_class(name):
 
 if __name__ == "__main__":
     main()
-    # name = "SHFSG"
-    # module = importlib.import_module(f"zhinst.toolkit.driver.devices.{name.lower()}")
-    # generate_qcodes_driver(getattr(module, name.upper()))
