@@ -98,6 +98,10 @@ where = ["src"]
 include = ["zhinst.*"]
 namespaces = true
 
+[tool.setuptools.package-data]
+"zhinst.qcodes" = ["py.typed"]
+"zhinst.qcodes.driver.devices._stubs" = ["*.pyi"]
+
 [tool.setuptools_scm]
 "write_to" = "src/zhinst/qcodes/_version.py"
 "local_scheme" = "no-local-version"
