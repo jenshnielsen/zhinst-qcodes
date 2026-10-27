@@ -40,6 +40,7 @@ def _ruff_format(code: str, filename: str) -> str:
         input=code,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=True,
     ).stdout
     return subprocess.run(
@@ -47,6 +48,7 @@ def _ruff_format(code: str, filename: str) -> str:
         input=fixed,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=True,
     ).stdout
 
